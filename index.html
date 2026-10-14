@@ -1,0 +1,894 @@
+<!doctype html>
+<!-- Переводчик браузера не трогает игру: язык и строки у неё свои. 13.10 на планшете Chrome решил по
+     lang="en" при загрузке, что страница английская, перевёл её (заголовок стал «Скай Уош») и насыпал в
+     консоль ошибок; язык игры `setLanguage` ставит в `lang` позже, когда решение уже принято. -->
+<html lang="en" translate="no">
+  <head>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta charset="UTF-8" />
+    <meta name="google" content="notranslate" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Sky Wash</title>
+    <!-- Пустой data URI: браузер не просит несуществующий favicon. -->
+    <link rel="icon" href="data:," />
+    <style>
+      /*
+        Шрифт свой, а не с CDN: порталы требуют самодостаточную сборку.
+        `unicode-range` не качает кириллицу, пока она не нужна.
+      */
+      @font-face {
+        font-family: "Rubik";
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url("./fonts/rubik-600-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Rubik";
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url("./fonts/rubik-600-cyrillic.woff2") format("woff2");
+        unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+      @font-face {
+        font-family: "Rubik";
+        font-style: normal;
+        font-weight: 800;
+        font-display: swap;
+        src: url("./fonts/rubik-800-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Rubik";
+        font-style: normal;
+        font-weight: 800;
+        font-display: swap;
+        src: url("./fonts/rubik-800-cyrillic.woff2") format("woff2");
+        unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+      }
+
+      :root {
+        /* Одна единица дизайна (холст 720×1280) в CSS-пикселях; ставит core/Layout.ts. */
+        --u: 1px;
+        /*
+          Значки интерфейса — в одном стиле: плоские цвета, тёмный контур, один блик
+          (владелец 13.10: «все иконки в одном стиле держать»).
+        */
+        --icon-coin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='21' fill='%23f2a81d' stroke='%230f2342' stroke-width='3'/%3E%3Ccircle cx='24' cy='24' r='15.5' fill='%23ffd23f' stroke='%23d98a10' stroke-width='2.5'/%3E%3Cpath d='M24 12.5v23M29.6 17.6c-1.2-1.6-3.3-2.5-5.6-2.5-3.3 0-5.6 1.8-5.6 4.3 0 6 11.4 3.4 11.4 9.4 0 2.6-2.5 4.4-5.8 4.4-2.4 0-4.7-1-5.9-2.8' fill='none' stroke='%23b86e0c' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M12.6 18.5a13 13 0 0 1 8.4-8' fill='none' stroke='%23fff6c4' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+        --icon-bucket: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M11.5 12.5C11.5 3 36.5 3 36.5 12.5' fill='none' stroke='%230f2342' stroke-width='2.6'/%3E%3Cpath d='M8.5 16h31l-4.4 27H12.9z' fill='%232f9bff' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M10 21h28l-.5 3H10.5z' fill='%23a6e6ff'/%3E%3Cpath d='M15.5 26.5l1.6 12' stroke='%23bfe8ff' stroke-width='2.6' stroke-linecap='round'/%3E%3Crect x='6' y='11.5' width='36' height='6.5' rx='3.2' fill='%23ffffff' stroke='%230f2342' stroke-width='3'/%3E%3C/svg%3E");
+        --icon-squeegee: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='19.5' y='19' width='9' height='25' rx='3.5' fill='%23ffb01f' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M22.5 23v15' stroke='%23ffe08a' stroke-width='2.4' stroke-linecap='round'/%3E%3Crect x='5' y='8' width='38' height='9' rx='3' fill='%23d9e1ea' stroke='%230f2342' stroke-width='3'/%3E%3Crect x='3.5' y='15.5' width='41' height='5.5' rx='2.5' fill='%231c1d22' stroke='%230f2342' stroke-width='2.4'/%3E%3Cpath d='M9 11h18' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+        --icon-lift: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M24 4.5L41.5 24H31.5v19h-15V24H6.5z' fill='%23ffc93a' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M20.5 27.5v11M24 9.5l-9.5 10.5' stroke='%23fff3b0' stroke-width='2.8' stroke-linecap='round'/%3E%3C/svg%3E");
+        --icon-soap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M17 14h11v-4h-9l-6 3' fill='%23ffffff' stroke='%230f2342' stroke-width='2.6' stroke-linejoin='round'/%3E%3Crect x='20' y='14' width='9' height='6' fill='%23d9e1ea' stroke='%230f2342' stroke-width='2.6'/%3E%3Cpath d='M15.5 20h18l2.5 6v16.5H13V26z' fill='%2313b0a2' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M17.5 28v10' stroke='%2383e6dc' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='9' r='3.2' fill='%23ffffff' stroke='%230f2342' stroke-width='2'/%3E%3Ccircle cx='5.5' cy='16' r='2.2' fill='%23ffffff' stroke='%230f2342' stroke-width='1.8'/%3E%3C/svg%3E");
+        --icon-robot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M30 9V4' stroke='%230f2342' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='30' cy='4.5' r='2.6' fill='%23ff4a3a' stroke='%230f2342' stroke-width='1.8'/%3E%3Ccircle cx='8' cy='12' r='4.5' fill='%239aa3b4' stroke='%230f2342' stroke-width='2.4'/%3E%3Ccircle cx='40' cy='12' r='4.5' fill='%239aa3b4' stroke='%230f2342' stroke-width='2.4'/%3E%3Ccircle cx='8' cy='38' r='4.5' fill='%239aa3b4' stroke='%230f2342' stroke-width='2.4'/%3E%3Ccircle cx='40' cy='38' r='4.5' fill='%239aa3b4' stroke='%230f2342' stroke-width='2.4'/%3E%3Crect x='7' y='9' width='34' height='31' rx='7' fill='%23f4f7fa' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M8.5 30h31v4.5h-31z' fill='%2313b0a2'/%3E%3Crect x='13' y='15' width='22' height='10' rx='3' fill='%231f2633'/%3E%3Ccircle cx='19' cy='20' r='2.6' fill='%235ad2ff'/%3E%3Ccircle cx='29' cy='20' r='2.6' fill='%235ad2ff'/%3E%3C/svg%3E");
+        --icon-letter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 48'%3E%3Crect x='3' y='6' width='58' height='38' rx='5' fill='%23fff3d6' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M4.5 9L32 29 59.5 9' fill='none' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M4.5 42l19-16M59.5 42l-19-16' stroke='%23d9c08a' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='29' r='8.5' fill='%23e8392f' stroke='%230f2342' stroke-width='2.6'/%3E%3Cpath d='M32 23.5l2.4 3.6v6.4h-4.8v-6.4z' fill='%23ffd23f' stroke='%237a1410' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --icon-crownmug: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath d='M36 22a7 7 0 0 1 0 14' fill='none' stroke='%230f2342' stroke-width='3.4'/%3E%3Crect x='8' y='16' width='28' height='28' rx='5' fill='%23ffffff' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M13 34V22l5 5 4-8 4 8 5-5v12z' fill='%23ffc93a' stroke='%230f2342' stroke-width='2.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --icon-cactus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='19' y='6' width='10' height='30' rx='5' fill='%233fae5a' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M19 22h-5a3 3 0 0 1-3-3v-5' fill='none' stroke='%230f2342' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M19 22h-5a3 3 0 0 1-3-3v-5' fill='none' stroke='%233fae5a' stroke-width='3.6' stroke-linecap='round'/%3E%3Cpath d='M29 26h5a3 3 0 0 0 3-3v-4' fill='none' stroke='%230f2342' stroke-width='8' stroke-linecap='round'/%3E%3Cpath d='M29 26h5a3 3 0 0 0 3-3v-4' fill='none' stroke='%233fae5a' stroke-width='3.6' stroke-linecap='round'/%3E%3Cpath d='M12 34h24l-3 11H15z' fill='%23e06a3a' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --icon-roof: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 36'%3E%3Crect x='40' y='4' width='8' height='16' fill='%23a24a32' stroke='%230f2342' stroke-width='2.6'/%3E%3Cpath d='M30 3.5L57 32.5H3z' fill='%23ec6a3c' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M30 10L13 28' stroke='%23ffa47a' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E");
+        --icon-foreman: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='38' r='19.5' fill='%23f6cfae' stroke='%230f2342' stroke-width='3'/%3E%3Ccircle cx='25' cy='38' r='2.6' fill='%230f2342'/%3E%3Ccircle cx='39' cy='38' r='2.6' fill='%230f2342'/%3E%3Crect x='21' y='44.5' width='22' height='5.5' rx='2.7' fill='%236b4a2f' stroke='%230f2342' stroke-width='1.6'/%3E%3Cpath d='M10.5 28.5a21.5 21.5 0 0 1 43 0z' fill='%23ffc93a' stroke='%230f2342' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M28 9.5h8v18h-8z' fill='%23ffd96a'/%3E%3Crect x='5.5' y='26.5' width='53' height='6.5' rx='3.2' fill='%23ffb01f' stroke='%230f2342' stroke-width='3'/%3E%3Cpath d='M17 22a16 16 0 0 1 6-9' fill='none' stroke='%23fff3b0' stroke-width='2.8' stroke-linecap='round'/%3E%3C/svg%3E");
+        /* Плашки интерфейса — одного вида: полупрозрачные, со светлой кромкой. */
+        --hud-fill: rgba(16, 42, 74, 0.55);
+        --hud-edge: rgba(255, 255, 255, 0.3);
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        /* Поля по бокам колонки на десктопе — продолжение неба. */
+        background: linear-gradient(180deg, #5fb4ea 0%, #a9dcf7 55%, #e4f5fd 100%);
+        /* Требование порталов: без выделения и меню по долгому нажатию. */
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
+        overscroll-behavior: none;
+        font-family: Rubik, system-ui, sans-serif;
+      }
+
+      /*
+        Игра всегда в портрете: Poki проверяет портрет у каждой игры, а небоскрёб и так
+        вертикальный. Шире 9:16 — колонка по центру, по бокам — поля.
+      */
+      #game {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(100vw, calc(100vh * 9 / 16));
+        width: min(100vw, calc(100dvh * 9 / 16));
+        overflow: hidden;
+        background: #8fd3f7;
+        box-shadow: 0 0 calc(var(--u) * 40) rgba(20, 60, 110, 0.25);
+      }
+      #game canvas {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #hud {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        padding-top: env(safe-area-inset-top);
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+      }
+      #coins {
+        margin-top: calc(var(--u) * 28);
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 14);
+        padding: calc(var(--u) * 10) calc(var(--u) * 30) calc(var(--u) * 10) calc(var(--u) * 14);
+        border-radius: calc(var(--u) * 48);
+        border: calc(var(--u) * 3) solid var(--hud-edge);
+        background: var(--hud-fill);
+        color: #fff;
+        font-weight: 800;
+        font-size: calc(var(--u) * 52);
+        line-height: 1;
+        letter-spacing: 0.02em;
+        text-shadow: 0 calc(var(--u) * 3) 0 rgba(0, 0, 0, 0.25);
+        transform-origin: 50% 50%;
+      }
+      #coins.bump {
+        animation: bump 0.18s ease-out;
+      }
+      @keyframes bump {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(1.14);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      /* Монета — CSS, а не картинка: ни байта сборки и чёткая на любом экране. */
+      /* Монета со знаком доллара — значком, а не градиентом: одна на счёт, полёт и цены. */
+      .coin {
+        width: calc(var(--u) * 56);
+        height: calc(var(--u) * 56);
+        background: var(--icon-coin) center / contain no-repeat;
+        flex: none;
+      }
+      #fx {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #fx .coin {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: calc(var(--u) * 44);
+        height: calc(var(--u) * 44);
+        will-change: transform;
+      }
+
+      .spark {
+        position: absolute;
+        color: #ffffff;
+        font-size: calc(var(--u) * 46);
+        line-height: 1;
+        text-shadow: 0 0 calc(var(--u) * 14) #fff3b0, 0 0 calc(var(--u) * 4) #ffffff;
+        transform: translate(-50%, -50%) scale(0);
+        animation: spark 0.6s ease-out forwards;
+      }
+      @keyframes spark {
+        0% {
+          transform: translate(-50%, -50%) scale(0) rotate(0deg);
+          opacity: 1;
+        }
+        40% {
+          transform: translate(-50%, -50%) scale(1.25) rotate(25deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(0.2) rotate(60deg);
+          opacity: 0;
+        }
+      }
+
+      /* Ведро: шкала воды на заход. Уровень — `--level` 0..1 (ставит Hud). */
+      #water {
+        --level: 1;
+        position: absolute;
+        left: calc(var(--u) * 18);
+        top: calc(env(safe-area-inset-top) + var(--u) * 35);
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 10);
+        padding: calc(var(--u) * 9) calc(var(--u) * 16) calc(var(--u) * 9) calc(var(--u) * 12);
+        border-radius: calc(var(--u) * 40);
+        border: calc(var(--u) * 3) solid var(--hud-edge);
+        background: var(--hud-fill);
+      }
+      #water .bucket {
+        width: calc(var(--u) * 48);
+        height: calc(var(--u) * 48);
+        background: var(--icon-bucket) center / contain no-repeat;
+      }
+      #water .bar {
+        position: relative;
+        width: calc(var(--u) * 130);
+        height: calc(var(--u) * 24);
+        border-radius: calc(var(--u) * 12);
+        background: rgba(255, 255, 255, 0.22);
+        overflow: hidden;
+      }
+      #water .level {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(180deg, #a6e6ff, #2f9ff0);
+        transform-origin: 0 50%;
+        transform: scaleX(var(--level));
+      }
+      #water.low .level {
+        background: linear-gradient(180deg, #ffb7a8, #f0503c);
+      }
+      #water.low {
+        animation: low 0.55s ease-in-out infinite alternate;
+      }
+      @keyframes low {
+        from {
+          background: var(--hud-fill);
+        }
+        to {
+          background: rgba(170, 44, 32, 0.75);
+        }
+      }
+
+      /* Веха крупно по центру: появляется, держится, уходит вверх. Ввода не забирает. */
+      .banner {
+        position: absolute;
+        left: 50%;
+        top: 40%;
+        padding: calc(var(--u) * 16) calc(var(--u) * 40);
+        border-radius: calc(var(--u) * 32);
+        background: rgba(16, 42, 74, 0.8);
+        color: #ffffff;
+        font-weight: 800;
+        font-size: calc(var(--u) * 62);
+        line-height: 1.1;
+        white-space: nowrap;
+        text-shadow: 0 calc(var(--u) * 3) 0 rgba(0, 0, 0, 0.25);
+        transform: translate(-50%, -50%);
+        animation: banner 1.7s ease-out forwards;
+      }
+      @keyframes banner {
+        0% {
+          transform: translate(-50%, -50%) scale(0.3);
+          opacity: 0;
+        }
+        14% {
+          transform: translate(-50%, -50%) scale(1.08);
+          opacity: 1;
+        }
+        24% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+        78% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-50%, -80%) scale(1);
+          opacity: 0;
+        }
+      }
+
+      /* Карточка, пока люлька внизу: итог захода и «Наверх». */
+      #panel {
+        position: absolute;
+        z-index: 5;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        /* Карточка — внизу: верх экрана остаётся счёту и рации бригадира. */
+        padding-bottom: calc(env(safe-area-inset-bottom) + var(--u) * 36);
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.25s ease-out;
+      }
+      #panel.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #panel .card {
+        width: calc(var(--u) * 580);
+        box-sizing: border-box;
+        padding: calc(var(--u) * 34) calc(var(--u) * 36) calc(var(--u) * 38);
+        border-radius: calc(var(--u) * 40);
+        background: #fffaf0;
+        color: #1d2b44;
+        text-align: center;
+        box-shadow: 0 calc(var(--u) * 12) 0 rgba(16, 42, 74, 0.28);
+        transform: translateY(calc(var(--u) * 60)) scale(0.92);
+        transition: transform 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      #panel.open .card {
+        transform: none;
+      }
+      #panel .title {
+        font-weight: 800;
+        font-size: calc(var(--u) * 58);
+        line-height: 1.1;
+      }
+      #panel .stats {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: calc(var(--u) * 14);
+        margin: calc(var(--u) * 16) 0 calc(var(--u) * 28);
+        color: #2b4a6e;
+        font-weight: 800;
+        font-size: calc(var(--u) * 44);
+      }
+      #panel .money {
+        display: inline-flex;
+        align-items: center;
+        gap: calc(var(--u) * 10);
+      }
+      #panel .money .coin {
+        width: calc(var(--u) * 44);
+        height: calc(var(--u) * 44);
+      }
+      #panel button {
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #panel .go {
+        padding: calc(var(--u) * 22) calc(var(--u) * 76);
+        border: 0;
+        border-radius: 999px;
+        background: #ffc93a;
+        color: #3b2a00;
+        font-weight: 800;
+        font-size: calc(var(--u) * 52);
+        box-shadow: 0 calc(var(--u) * 8) 0 #d99a12;
+      }
+      #panel .go:active {
+        transform: translateY(calc(var(--u) * 6));
+        box-shadow: 0 calc(var(--u) * 2) 0 #d99a12;
+      }
+
+      /* Слой облачков: над шкалой цели, под карточкой итога и рацией. */
+      #talk {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      /* Облачко жильца: точка-якорь над окном (translate ставит Speech), текст над ней. */
+      .bubble {
+        --tail: 0px;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 0;
+      }
+      .bubble .say {
+        position: absolute;
+        left: 0;
+        bottom: calc(var(--u) * 16);
+        width: max-content;
+        max-width: calc(var(--u) * 420);
+        padding: calc(var(--u) * 14) calc(var(--u) * 22);
+        border-radius: calc(var(--u) * 28);
+        background: #ffffff;
+        color: #1d2b44;
+        font-weight: 800;
+        font-size: calc(var(--u) * 31);
+        line-height: 1.15;
+        text-align: center;
+        box-shadow: 0 calc(var(--u) * 6) 0 rgba(16, 42, 74, 0.2);
+        transform: translateX(-50%);
+        animation: say 0.32s cubic-bezier(0.2, 1.5, 0.4, 1);
+        transform-origin: 50% 100%;
+      }
+      .bubble .say::after {
+        content: "";
+        position: absolute;
+        left: calc(50% + var(--tail));
+        bottom: calc(var(--u) * -14);
+        border: calc(var(--u) * 15) solid transparent;
+        border-bottom: 0;
+        border-top-color: #ffffff;
+        transform: translateX(-50%);
+      }
+      /* Значок у закрытых жалюзи: подсказка (кружка с короной или кактус) и «Мыть?». */
+      .bubble.hint .say {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 10);
+        padding: calc(var(--u) * 8) calc(var(--u) * 20) calc(var(--u) * 8) calc(var(--u) * 10);
+        background: #fff5d6;
+      }
+      .bubble.hint .say::after {
+        border-top-color: #fff5d6;
+      }
+      .bubble.hint .say::before {
+        content: "";
+        width: calc(var(--u) * 58);
+        height: calc(var(--u) * 58);
+        background: var(--icon-crownmug) center / contain no-repeat;
+      }
+      .bubble.hint.guard .say::before {
+        background-image: var(--icon-cactus);
+      }
+      .bubble.gone .say {
+        animation: unsay 0.25s ease-in forwards;
+      }
+      @keyframes say {
+        from {
+          transform: translateX(-50%) scale(0.2);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(-50%) scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes unsay {
+        to {
+          transform: translateX(-50%) scale(0.6);
+          opacity: 0;
+        }
+      }
+
+      /* Рация бригадира: каска, имя, текст. Под счётом, ввода не забирает. */
+      #radio {
+        position: absolute;
+        z-index: 6;
+        /* Слева, до карточки Шпиля справа: цель не закрываем. */
+        left: calc(var(--u) * 18);
+        top: calc(env(safe-area-inset-top) + var(--u) * 118);
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 16);
+        width: calc(var(--u) * 584);
+        box-sizing: border-box;
+        padding: calc(var(--u) * 14) calc(var(--u) * 24) calc(var(--u) * 14) calc(var(--u) * 16);
+        border-radius: calc(var(--u) * 30);
+        border: calc(var(--u) * 3) solid var(--hud-edge);
+        /* Плотнее остальных плашек: на ней читают текст. */
+        background: rgba(16, 42, 74, 0.78);
+        color: #ffffff;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(calc(var(--u) * -30));
+        transition:
+          transform 0.3s ease-out,
+          opacity 0.3s ease-out;
+      }
+      #radio.open {
+        opacity: 1;
+        transform: none;
+      }
+      #radio .face {
+        flex: none;
+        width: calc(var(--u) * 78);
+        height: calc(var(--u) * 78);
+        background: var(--icon-foreman) center / contain no-repeat;
+      }
+      #radio .who {
+        color: #ffc93a;
+        font-weight: 800;
+        font-size: calc(var(--u) * 22);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      #radio .text {
+        font-weight: 600;
+        font-size: calc(var(--u) * 30);
+        line-height: 1.2;
+      }
+
+      /* Магазин внизу: строка — значок, что, цена. Доступное зовёт к себе. */
+      #panel .shop {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--u) * 14);
+        margin: 0 0 calc(var(--u) * 28);
+      }
+      #panel .item {
+        display: flex;
+        align-items: center;
+        gap: calc(var(--u) * 16);
+        padding: calc(var(--u) * 12) calc(var(--u) * 16);
+        border: 0;
+        border-radius: calc(var(--u) * 24);
+        background: #eef3f9;
+        color: #1d2b44;
+        font-weight: 800;
+        font-size: calc(var(--u) * 34);
+        text-align: left;
+        box-shadow: 0 calc(var(--u) * 6) 0 #c9d6e6;
+      }
+      #panel .item .name {
+        flex: 1;
+      }
+      #panel .item .price {
+        display: inline-flex;
+        align-items: center;
+        gap: calc(var(--u) * 8);
+        padding: calc(var(--u) * 8) calc(var(--u) * 18) calc(var(--u) * 8) calc(var(--u) * 10);
+        border-radius: 999px;
+        background: #1d2b44;
+        color: #ffffff;
+        font-size: calc(var(--u) * 32);
+      }
+      #panel .item .price .coin {
+        width: calc(var(--u) * 34);
+        height: calc(var(--u) * 34);
+      }
+      #panel .item.can {
+        background: #fff1bd;
+        box-shadow: 0 calc(var(--u) * 6) 0 #e3b53a;
+        animation: offer 1.1s ease-in-out infinite;
+      }
+      #panel .item:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      #panel .item .icon {
+        flex: none;
+        width: calc(var(--u) * 56);
+        height: calc(var(--u) * 56);
+      }
+      #panel .item.bucket .icon {
+        background: var(--icon-bucket) center / contain no-repeat;
+      }
+      #panel .item.squeegee .icon {
+        background: var(--icon-squeegee) center / contain no-repeat;
+      }
+      #panel .item.lift .icon {
+        background: var(--icon-lift) center / contain no-repeat;
+      }
+      #panel .item.soap .icon {
+        background: var(--icon-soap) center / contain no-repeat;
+      }
+      #panel .item.robot .icon {
+        background: var(--icon-robot) center / contain no-repeat;
+      }
+      /* Письмо заказчика на крыше офиса (ПЛАН 2.5): прилетает голубиной почтой — с края, вращаясь. */
+      #panel .card.letter .stats {
+        margin-bottom: calc(var(--u) * 20);
+      }
+      #panel .paper {
+        position: relative;
+        margin: 0 0 calc(var(--u) * 26);
+        padding: calc(var(--u) * 30) calc(var(--u) * 34) calc(var(--u) * 24);
+        border-radius: calc(var(--u) * 14);
+        background: #fffdf4;
+        background-image: repeating-linear-gradient(transparent 0 calc(var(--u) * 45), #e3ecf6 calc(var(--u) * 45) calc(var(--u) * 47));
+        color: #1d2b44;
+        text-align: left;
+        box-shadow: 0 calc(var(--u) * 6) 0 rgba(16, 42, 74, 0.18);
+        animation: letterIn 0.75s cubic-bezier(0.2, 1.25, 0.4, 1) 0.5s both;
+      }
+      #panel .paper .envelope {
+        position: absolute;
+        top: calc(var(--u) * -40);
+        right: calc(var(--u) * -22);
+        width: calc(var(--u) * 100);
+        height: calc(var(--u) * 76);
+        background: var(--icon-letter) center / contain no-repeat;
+        transform: rotate(10deg);
+      }
+      #panel .paper .head {
+        margin-bottom: calc(var(--u) * 10);
+        color: #13807a;
+        font-weight: 800;
+        font-size: calc(var(--u) * 36);
+      }
+      #panel .paper .body {
+        margin: 0 0 calc(var(--u) * 12);
+        font-weight: 600;
+        font-size: calc(var(--u) * 32);
+        line-height: 1.42;
+      }
+      #panel .paper .ps {
+        margin: 0;
+        color: #6a3fb5;
+        font-weight: 600;
+        font-size: calc(var(--u) * 30);
+        line-height: 1.4;
+      }
+      #panel .paper .sign {
+        margin-top: calc(var(--u) * 14);
+        text-align: right;
+        font-weight: 800;
+        font-size: calc(var(--u) * 32);
+        transform: rotate(-3deg);
+      }
+      @keyframes letterIn {
+        from {
+          opacity: 0;
+          transform: translate(calc(var(--u) * 460), calc(var(--u) * -300)) rotate(28deg) scale(0.35);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      /* Мыльные пузыри поверх интерфейса — покупка моющего средства (владелец 14.10: эффект должен быть явным). */
+      .soap-bubble {
+        position: absolute;
+        z-index: 7;
+        border-radius: 50%;
+        background: radial-gradient(circle at 32% 30%, #ffffff 0 12%, rgba(255, 255, 255, 0.2) 22%, rgba(255, 220, 245, 0.25) 60%, rgba(190, 230, 255, 0.9) 92%, rgba(255, 255, 255, 0) 100%);
+        box-shadow: inset 0 0 0 calc(var(--u) * 2) rgba(70, 120, 200, 0.55);
+        pointer-events: none;
+        animation: soap-rise 1.8s ease-out both;
+      }
+      @keyframes soap-rise {
+        0% {
+          transform: translate(-50%, 0) scale(0.3);
+          opacity: 0;
+        }
+        15% {
+          opacity: 1;
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(calc(-50% + var(--sway)), var(--rise)) scale(1);
+          opacity: 0;
+        }
+      }
+      #panel .record {
+        margin: calc(var(--u) * -12) 0 calc(var(--u) * 24);
+        color: #6b7f98;
+        font-weight: 800;
+        font-size: calc(var(--u) * 32);
+      }
+      #panel .record.new {
+        color: #e0821a;
+        animation: offer 0.9s ease-in-out 3;
+      }
+      @keyframes offer {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.035);
+        }
+      }
+
+      /*
+        Цель: Шпиль в облаках с горящим пентхаусом и шкала этого дома с меткой люльки.
+        Сплошные тёмные плашки с белой кромкой — на любой стене видно (владелец 13.10:
+        «почти не видна, сливается»).
+      */
+      #goal {
+        position: absolute;
+        right: calc(var(--u) * 12);
+        top: calc(env(safe-area-inset-top) + var(--u) * 26);
+        width: calc(var(--u) * 82);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: calc(var(--u) * 10);
+        pointer-events: none;
+      }
+      #goal .spire,
+      #goal .rail {
+        box-sizing: border-box;
+        width: 100%;
+        border: calc(var(--u) * 3) solid var(--hud-edge);
+        border-radius: calc(var(--u) * 26);
+        background: var(--hud-fill);
+      }
+      #goal .spire {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        height: calc(var(--u) * 128);
+        overflow: hidden;
+      }
+      #goal .spire svg {
+        width: calc(var(--u) * 60);
+        height: calc(var(--u) * 112);
+      }
+      #goal .spire .glow {
+        animation: penthouse 1.2s ease-in-out infinite alternate;
+      }
+      #goal .spire .beacon {
+        animation: penthouse 0.7s steps(2, jump-none) infinite alternate;
+      }
+      @keyframes penthouse {
+        from {
+          opacity: 0.3;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      #goal .rail {
+        position: relative;
+        height: calc(var(--u) * 330);
+      }
+      #goal .roof {
+        position: absolute;
+        left: 50%;
+        top: calc(var(--u) * 10);
+        width: calc(var(--u) * 58);
+        height: calc(var(--u) * 35);
+        transform: translateX(-50%);
+        background: var(--icon-roof) center / contain no-repeat;
+      }
+      #goal .track {
+        position: absolute;
+        left: 50%;
+        top: calc(var(--u) * 52);
+        bottom: calc(var(--u) * 20);
+        width: calc(var(--u) * 12);
+        border-radius: calc(var(--u) * 6);
+        background: rgba(255, 255, 255, 0.85);
+        transform: translateX(-50%);
+      }
+      #goal .track i {
+        position: absolute;
+        left: 50%;
+        width: calc(var(--u) * 28);
+        height: calc(var(--u) * 6);
+        border-radius: calc(var(--u) * 3);
+        background: #ffffff;
+        box-shadow: 0 0 0 calc(var(--u) * 1.5) rgba(16, 42, 74, 0.5);
+        transform: translate(-50%, 50%);
+      }
+      #goal .marker {
+        position: absolute;
+        left: 50%;
+        min-width: calc(var(--u) * 76);
+        box-sizing: border-box;
+        padding: calc(var(--u) * 6) calc(var(--u) * 10);
+        border: calc(var(--u) * 3) solid #2b2233;
+        border-radius: 999px;
+        background: #ffc93a;
+        color: #2b2233;
+        font-weight: 800;
+        font-size: calc(var(--u) * 30);
+        line-height: 1.1;
+        text-align: center;
+        box-shadow: 0 calc(var(--u) * 4) 0 rgba(0, 0, 0, 0.3);
+        transform: translate(-50%, 50%);
+      }
+
+      /* Переезд к следующему зданию — в затемнении цвета неба. */
+      #fade {
+        position: absolute;
+        inset: 0;
+        z-index: 7;
+        background: #dff3fc;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.6s ease-in-out;
+      }
+      #fade.dark {
+        opacity: 1;
+      }
+
+      /*
+        Загрузка: пока игра не готова, видно только небо и ползунок — интерфейс без
+        размеров (--u ещё не посчитан) не показываем (владелец 13.10: «кривая вёрстка»).
+      */
+      #game.loading > :not(#boot) {
+        visibility: hidden;
+      }
+      #boot {
+        --p: 4%;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #5fb4ea 0%, #a9dcf7 55%, #e4f5fd 100%);
+        color: #ffffff;
+        font: 600 16px/1.4 Rubik, system-ui, sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        transition: opacity 0.3s ease-out;
+      }
+      #boot.done {
+        opacity: 0;
+      }
+      /* Обложка (арт из генерации, 14.10) над ползунком загрузки. */
+      #boot .cover {
+        width: 78%;
+        max-width: 420px;
+        aspect-ratio: 1;
+        margin-bottom: 28px;
+        border-radius: 28px;
+        box-shadow: 0 10px 0 rgba(16, 42, 74, 0.25);
+      }
+      #boot .bar {
+        width: 56%;
+        height: 16px;
+        border-radius: 8px;
+        background: rgba(16, 42, 74, 0.22);
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+        overflow: hidden;
+      }
+      #boot .fill {
+        width: var(--p);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(180deg, #ffe07a, #ffb21f);
+        transition: width 0.25s ease-out;
+      }
+      /* Пока качается скрипт — ползунок сам идёт к середине; дальше его ведут шаги загрузки. */
+      #boot.fake .fill {
+        animation: preload 5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+      }
+      @keyframes preload {
+        from {
+          width: 4%;
+        }
+        to {
+          width: 55%;
+        }
+      }
+
+      #debug {
+        position: absolute;
+        left: calc(var(--u) * 12);
+        bottom: calc(var(--u) * 12);
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #9effa0;
+        font: 600 12px/1.35 ui-monospace, Menlo, monospace;
+        white-space: pre;
+        pointer-events: none;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-Dc0I_PTJ.js"></script>
+  </head>
+  <body>
+    <div id="game" class="loading">
+      <div id="hud">
+        <div id="water"><span class="bucket"></span><span class="bar"><span class="level"></span></span></div>
+        <div id="coins"><span class="coin"></span><span id="coins-value">0</span></div>
+      </div>
+      <div id="fx"></div>
+      <div id="boot" class="fake">
+        <img class="cover" src="./art/cover.webp" alt="" />
+        <div class="bar"><div class="fill"></div></div>
+      </div>
+    </div>
+  </body>
+</html>
